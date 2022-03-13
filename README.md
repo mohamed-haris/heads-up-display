@@ -1,2 +1,3 @@
-# heads-up-display
+# heads_up_display
+
 IBM FINAL YEAR PROJECT
