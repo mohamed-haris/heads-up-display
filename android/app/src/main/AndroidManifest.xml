@@ -1,10 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.heads_up_display">
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
    <application
-        android:label="heads_up_display"
+        android:label="Heads Up Display"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyDhnZPb3poxztZMVhiMckxDQCwLWNunlEE"/>
+               android:value="AIzaSyDCuKy13gI0jK87yj79atEhlk2hUHVZz3U"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

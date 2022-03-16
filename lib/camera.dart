@@ -48,28 +48,28 @@ class _CameraState extends State<Camera> {
 
             int startTime = new DateTime.now().millisecondsSinceEpoch;
 
-            // Tflite.detectObjectOnFrame(
-            //   rotation: 0,
-            //   bytesList: img.planes.map((plane) {
-            //     return plane.bytes;
-            //   }).toList(),
-            //   model: widget.model == yolo ? "YOLO" : "SSDMobileNet",
-            //   imageHeight: img.height,
-            //   imageWidth: img.width,
-            //   imageMean: widget.model == yolo ? 0 : 127.5,
-            //   imageStd: widget.model == yolo ? 255.0 : 127.5,
-            //   numResultsPerClass: 1,
-            //   threshold: widget.model == yolo ? 0.2 : 0.4,
-            // ).then((recognitions) {
-            //   // print(recognitions);
+            Tflite.detectObjectOnFrame(
+              rotation: 0,
+              bytesList: img.planes.map((plane) {
+                return plane.bytes;
+              }).toList(),
+              model: widget.model == yolo ? "YOLO" : "SSDMobileNet",
+              imageHeight: img.height,
+              imageWidth: img.width,
+              imageMean: widget.model == yolo ? 0 : 127.5,
+              imageStd: widget.model == yolo ? 255.0 : 127.5,
+              numResultsPerClass: 1,
+              threshold: widget.model == yolo ? 0.2 : 0.4,
+            ).then((recognitions) {
+              // print(recognitions);
 
-            //   int endTime = new DateTime.now().millisecondsSinceEpoch;
-            //   print("Detection took ${endTime - startTime}");
+              int endTime = new DateTime.now().millisecondsSinceEpoch;
+              print("Detection took ${endTime - startTime}");
 
-            //   widget.setRecognitions(recognitions!, img.height, img.width);
+              widget.setRecognitions(recognitions!, img.height, img.width);
 
-            //   isDetecting = false;
-            // });
+              isDetecting = false;
+            });
           }
         });
       });

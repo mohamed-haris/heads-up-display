@@ -26,7 +26,6 @@ dependencies:
   camera: ^0.8.1+7
   tflite: ^1.0.3
 
-  pedometer: ^3.0.0
   percent_indicator: ^3.0.1
   battery: ^2.0.3
   sensors: ^2.0.3

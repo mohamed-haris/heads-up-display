@@ -60,13 +60,6 @@ class _HUDState extends State<HUD> {
             widget.model,
             setRecognitions,
           ),
-          BndBox(
-            _recognitions == null ? [] : _recognitions,
-            math.max(_imageHeight, _imageWidth),
-            math.min(_imageHeight, _imageWidth),
-            screen.height,
-            screen.width,
-          ),
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -76,6 +69,13 @@ class _HUDState extends State<HUD> {
             ),
           ),
           HUDDetails(),
+          BndBox(
+            _recognitions == null ? [] : _recognitions,
+            math.max(_imageHeight, _imageWidth),
+            math.min(_imageHeight, _imageWidth),
+            screen.height,
+            screen.width,
+          ),
         ],
       ),
     );

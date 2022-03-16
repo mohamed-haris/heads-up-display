@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "982168134935",
+    "project_id": "headsupdisplay-cc48a",
+    "storage_bucket": "headsupdisplay-cc48a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:982168134935:android:909de6e0e66911e77c0352",
+        "android_client_info": {
+          "package_name": "com.example.heads_up_display"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "982168134935-iiq7kuvj19r3v0eo896givpp4rgao992.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnxW0sRiL0q5pqydOVrkTVDjEe7gyCre4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "982168134935-iiq7kuvj19r3v0eo896givpp4rgao992.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
