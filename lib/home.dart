@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
+import 'package:heads_up_display/fbase_user.dart';
+import 'package:heads_up_display/firestore_service.dart';
 import 'package:heads_up_display/hud.dart';
 import 'package:heads_up_display/main.dart';
+import 'package:provider/provider.dart';
+import 'package:shake/shake.dart';
 import 'package:tflite/tflite.dart';
+import 'package:twilio_flutter/twilio_flutter.dart';
 import 'dart:math' as math;
 
 import 'camera.dart';
@@ -28,16 +34,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+  ]);
+  
     super.initState();
-  }
-
-  loadModel() async {
-    String res;
-    res = (await Tflite.loadModel(
-        model: "assets/ssd_mobilenet.tflite",
-        labels: "assets/ssd_mobilenet.txt"))!;
-
-    print(res);
   }
 
   setRecognitions(recognitions, imageHeight, imageWidth) {
@@ -48,10 +49,20 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  String name = '';
+  void setName(String s){
+    setState(() {
+      name = s;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    final user = Provider.of<FBaseUser>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -62,22 +73,32 @@ class _HomePageState extends State<HomePage> {
                       "Wake Up!!",
                       style: TextStyle(color: Colors.black),
                     ),
-                    onPressed: () => Navigator.push(
+                    onPressed: () async {
+                      var s = await FirestoreService().getName(user.uid!);
+                      List emergencyContacts = await FirestoreService().getEmergencyContacts(user.uid!);
+                      setName(s);
+                      Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => HUD(cameras,ssd)),
-                    ),
+                      MaterialPageRoute(builder: (context) => HUD(cameras,ssd, name, emergencyContacts)),
+                    );
+                    }
                   ),
-                  // RaisedButton(
-                  //   color: Colors.teal,
-                  //   child: const Text(
-                  //     yolo,
-                  //     style: TextStyle(color: Colors.black),
-                  //   ),
-                  //   onPressed: () =>  Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(builder: (context) => HUD(cameras,yolo)),
-                  //   ),
-                  // ),
+                  RaisedButton(
+                    color: Colors.teal,
+                    child: const Text(
+                      yolo,
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    onPressed: () async {
+                      var s = await FirestoreService().getName(user.uid!);
+                      List emergencyContacts = await FirestoreService().getEmergencyContacts(user.uid!);
+                      setName(s);
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HUD(cameras,yolo, name, emergencyContacts)),
+                    );
+                    }
+                  ),
                 ],
               ),
             )

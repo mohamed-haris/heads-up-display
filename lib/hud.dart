@@ -13,8 +13,10 @@ const String yolo = "Tiny YOLOv2";
 class HUD extends StatefulWidget {
   final List<CameraDescription>? cameras;
   final String model;
+  final String name;
+  final List emergencyContacts;
 
-  HUD(this.cameras, this.model);
+  HUD(this.cameras, this.model, this.name, this.emergencyContacts);
 
   @override
   _HUDState createState() => new _HUDState();
@@ -33,9 +35,15 @@ class _HUDState extends State<HUD> {
 
   loadModel() async {
     String res;
-    res = (await Tflite.loadModel(
-        model: "assets/ssd_mobilenet.tflite",
-        labels: "assets/ssd_mobilenet.txt"))!;
+    if (widget.model == ssd) {
+      res = (await Tflite.loadModel(
+          model: "assets/ssd_mobilenet.tflite",
+          labels: "assets/ssd_mobilenet.txt"))!;
+    } else {
+      res = (await Tflite.loadModel(
+          model: "assets/yolov2_tiny.tflite",
+          labels: "assets/yolov2_tiny.txt"))!;
+    }
 
     print(res);
   }
@@ -63,12 +71,10 @@ class _HUDState extends State<HUD> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                  image: AssetImage(
-                      'assets/hud_bg.png'),
-                  fit: BoxFit.cover),
+                  image: AssetImage('assets/hud_bg.png'), fit: BoxFit.cover),
             ),
           ),
-          HUDDetails(),
+          HUDDetails(widget.name, widget.emergencyContacts),
           BndBox(
             _recognitions == null ? [] : _recognitions,
             math.max(_imageHeight, _imageWidth),

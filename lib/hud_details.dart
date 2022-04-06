@@ -4,10 +4,17 @@ import 'dart:math';
 import 'package:battery/battery.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:heads_up_display/fbase_user.dart';
+import 'package:heads_up_display/firestore_service.dart';
 import 'package:heads_up_display/speedometer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:sensors/sensors.dart';
+import 'package:shake/shake.dart';
+import 'package:twilio_flutter/twilio_flutter.dart';
 
 import 'mapUtils.dart';
 import 'package:location/location.dart';
@@ -18,6 +25,9 @@ const double CAMERA_BEARING = 30;
 const LatLng SOURCE_LOCATION = LatLng(13.172455360701715, 80.24790202647446);
 
 class HUDDetails extends StatefulWidget {
+  final String name;
+  final List emergencyContacts;
+  HUDDetails(this.name, this.emergencyContacts);
   @override
   _HUDDetailsState createState() => _HUDDetailsState();
 }
@@ -38,19 +48,32 @@ class _HUDDetailsState extends State<HUDDetails> {
   Timer? timer;
 
   CameraPosition initialCameraPosition = CameraPosition(
-          zoom: CAMERA_ZOOM,
-          tilt: CAMERA_TILT,
-          bearing: CAMERA_BEARING,
-          target: SOURCE_LOCATION);
+      zoom: CAMERA_ZOOM,
+      tilt: CAMERA_TILT,
+      bearing: CAMERA_BEARING,
+      target: SOURCE_LOCATION);
 
   var lat;
   var long;
+  var speedInMPS;
+
+  late TwilioFlutter twilioFlutter;
 
   @override
   void initState() {
     super.initState();
+
+    twilioFlutter = TwilioFlutter(
+        accountSid: 'AC39e63ec1f29edd760bbdc08f76314dce',
+        authToken: 'bca45feaf0e19698b8fe01869ed71f9c',
+        twilioNumber: '+18454787636');
+
+    // ShakeDetector detector = ShakeDetector.autoStart(onPhoneShake: () {
+    //   print(widget.emergencyContacts);
+    //   sendCrashSMS("+917401529298");
+    // });
+
     listenBatteryLvl();
-    // initPlatformState();
     _streamSubscriptions
         .add(accelerometerEvents.listen((AccelerometerEvent event) {
       setState(() {
@@ -67,7 +90,7 @@ class _HUDDetailsState extends State<HUDDetails> {
       setState(() {
         _userAccelerometerValues = <double>[event.x, event.y, event.z];
       });
-      onAccelerate(event);
+      // onAccelerate(event);
     }));
     setCurrentLocation();
   }
@@ -77,26 +100,26 @@ class _HUDDetailsState extends State<HUDDetails> {
     LocationData currentLocation = await _location.getLocation();
     setState(() {
       lat = currentLocation.latitude;
-    long = currentLocation.longitude;
+      long = currentLocation.longitude;
     });
   }
 
-  void onAccelerate(UserAccelerometerEvent event) {
-    double newVelocity =
-        sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+  // void onAccelerate(UserAccelerometerEvent event) {
+  //   double newVelocity =
+  //       sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
-    if ((newVelocity - velocity).abs() < 1) {
-      return;
-    }
+  //   if ((newVelocity - velocity).abs() < 1) {
+  //     return;
+  //   }
 
-    setState(() {
-      velocity = newVelocity;
+  //   setState(() {
+  //     velocity = newVelocity;
 
-      if (velocity > highestVelocity) {
-        highestVelocity = velocity;
-      }
-    });
-  }
+  //     if (velocity > highestVelocity) {
+  //       highestVelocity = velocity;
+  //     }
+  //   });
+  // }
 
   void listenBatteryLvl() {
     timer = Timer.periodic(Duration(seconds: 10), (_) async {
@@ -109,6 +132,13 @@ class _HUDDetailsState extends State<HUDDetails> {
     setState(() {
       this.batteryLvl = batteryLvl;
     });
+  }
+
+  void sendCrashSMS(String number) {
+    twilioFlutter.sendSMS(
+        toNumber: number,
+        messageBody:
+            'SOS! Your contact ${widget.name} might have had an accident. Please reach out as soon as possible.');
   }
 
   @override
@@ -130,94 +160,139 @@ class _HUDDetailsState extends State<HUDDetails> {
         _accelerometerValues?.map((double v) => v.toStringAsFixed(1)).toList();
     final List<String>? gyroscope =
         _gyroscopeValues?.map((double v) => v.toStringAsFixed(1)).toList();
-    final List<String>? userAccelerometer = _userAccelerometerValues
-        ?.map((double v) => v.toStringAsFixed(1))
-        .toList();
+    // final List<String>? userAccelerometer = _userAccelerometerValues
+    //     ?.map((double v) => v.toStringAsFixed(1))
+    //     .toList();
 
     setCurrentLocation();
+
+    geo.Geolocator.getPositionStream(
+            locationSettings: geo.AndroidSettings(
+                forceLocationManager: true,
+                intervalDuration: Duration(seconds: 1),
+                distanceFilter: 2,
+                accuracy: geo.LocationAccuracy.best))
+        .listen((position) {
+      speedInMPS = position.speed.toStringAsFixed(0);
+    });
 
     initialCameraPosition = CameraPosition(
         zoom: 16,
         tilt: CAMERA_TILT,
         bearing: CAMERA_BEARING,
-        target: LatLng(lat, long));
+        target: lat == null
+            ? LatLng(13.172455360701715, 80.24790202647446)
+            : LatLng(lat, long));
+
+    updateCurrentLocation(lat == null
+        ? LatLng(13.172455360701715, 80.24790202647446)
+        : LatLng(lat, long));
 
     return Container(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
-      // padding: const EdgeInsets.only(left: 10.0, right: 10, bottom: 10),
       child: Column(
         children: [
-          Center(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: Color(0xff87D3E2).withOpacity(0.35),
-              ),
-              padding: EdgeInsets.all(10),
-              width: MediaQuery.of(context).size.width * 0.50,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    accelerometer != null
-                        ? 'Acc: $accelerometer'
-                        : 'Acc: [0.0, 0.0, 0.0]',
-                    style: TextStyle(shadows: [
+          Column(
+            children: [
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color(0xff87D3E2).withOpacity(0.35),
+                  ),
+                  padding: EdgeInsets.all(10),
+                  width: MediaQuery.of(context).size.width * 0.50,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text(
+                  // '${widget.name}',
+                  'Welcome, Haris',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    foreground: Paint()
+                      ..shader = LinearGradient(
+                        colors: const [Color(0xff87D3E2), Colors.white],
+                      ).createShader(Rect.fromLTWH(0.0, 0.0, 120.0, 70.0)),
+                    shadows: [
                       Shadow(
                         color: Colors.black.withOpacity(0.9),
                         offset: Offset(3, 3),
                         blurRadius: 7,
                       ),
-                    ], color: Colors.white, fontWeight: FontWeight.bold),
+                    ],
                   ),
-                  Text(
-                    gyroscope != null
-                        ? 'Gyro: $gyroscope'
-                        : 'Gyro: [0.0, 0.0, 0.0]',
-                    style: TextStyle(shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.9),
-                        offset: Offset(3, 3),
-                        blurRadius: 7,
-                      ),
-                    ], color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                ),
               ),
-            ),
+                      Text(
+                        accelerometer != null
+                            ? 'Acc: $accelerometer'
+                            : 'Acc: [0.0, 0.0, 0.0]',
+                        style: TextStyle(shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.9),
+                            offset: Offset(3, 3),
+                            blurRadius: 7,
+                          ),
+                        ], color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        gyroscope != null
+                            ? 'Gyro: $gyroscope'
+                            : 'Gyro: [0.0, 0.0, 0.0]',
+                        style: TextStyle(shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.9),
+                            offset: Offset(3, 3),
+                            blurRadius: 7,
+                          ),
+                        ], color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(130)),
-                  color: Color(0xff87D3E2).withOpacity(0.3),
-                ),
-                child: CircularPercentIndicator(
-                  radius: 130.0,
-                  animation: true,
-                  animationDuration: 1200,
-                  lineWidth: 15.0,
-                  percent: batteryLvl / 100,
-                  center: Text(
-                    "$batteryLvl%",
-                    style: new TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.0,
-                        color: Colors.white,
-                        shadows: [
-                          BoxShadow(
-                              blurRadius: 5,
-                              offset: Offset(3, 3),
-                              color: Colors.black)
-                        ]),
+              Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(130)),
+                      color: Color(0xff87D3E2).withOpacity(0.3),
+                    ),
+                    child: CircularPercentIndicator(
+                      radius: 130.0,
+                      animation: true,
+                      animationDuration: 1200,
+                      lineWidth: 15.0,
+                      percent: batteryLvl / 100,
+                      center: Text(
+                        "$batteryLvl%",
+                        style: new TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20.0,
+                            color: Colors.white,
+                            shadows: [
+                              BoxShadow(
+                                  blurRadius: 5,
+                                  offset: Offset(3, 3),
+                                  color: Colors.black)
+                            ]),
+                      ),
+                      circularStrokeCap: CircularStrokeCap.butt,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      progressColor: Color(0xff01738E).withOpacity(0.3),
+                    ),
                   ),
-                  circularStrokeCap: CircularStrokeCap.butt,
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  progressColor: Color(0xff01738E).withOpacity(0.3),
-                ),
+                ],
               ),
             ],
           ),
@@ -231,19 +306,26 @@ class _HUDDetailsState extends State<HUDDetails> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xff87D3E2).withOpacity(0.45),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.5),
-                                offset: Offset(3, 3),
-                                blurRadius: 5)
-                          ]),
-                      child: Speedometer(
-                        speed: velocity,
-                        speedRecord: highestVelocity,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
+                      child: Text(
+                        speedInMPS != null ? "$speedInMPS Km/h" : '0 Km/h',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          foreground: Paint()
+                            ..shader = LinearGradient(
+                              colors: const [Color(0xff87D3E2), Colors.teal],
+                            ).createShader(
+                                Rect.fromLTWH(0.0, 0.0, 120.0, 70.0)),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.9),
+                              offset: Offset(3, 3),
+                              blurRadius: 7,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     Opacity(
@@ -252,7 +334,10 @@ class _HUDDetailsState extends State<HUDDetails> {
                         height: 130,
                         width: 230,
                         child: GoogleMap(
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: true,
                             mapType: MapType.normal,
+                            zoomControlsEnabled: false,
                             initialCameraPosition: initialCameraPosition,
                             onMapCreated: (GoogleMapController controller) {
                               controller.setMapStyle(MapUtils.mapStyles);
@@ -269,4 +354,56 @@ class _HUDDetailsState extends State<HUDDetails> {
       ),
     );
   }
+
+  void updateCurrentLocation(LatLng latLng) async {
+    CameraPosition cPosition = CameraPosition(
+      zoom: CAMERA_ZOOM,
+      tilt: CAMERA_TILT,
+      bearing: CAMERA_BEARING,
+      target: latLng,
+    );
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(cPosition));
+  }
 }
+
+
+// package com.baseflow.geolocator.location;
+
+// import android.location.Location;
+// import android.os.Build;
+
+// import java.util.HashMap;
+// import java.util.Map;
+
+// @SuppressWarnings("deprecation")
+// public class LocationMapper {
+//   public static Map<String, Object> toHashMap(Location location) {
+//     if (location == null) {
+//       return null;
+//     }
+
+//     Map<String, Object> position = new HashMap<>();
+
+//     position.put("latitude", location.getLatitude());
+//     position.put("longitude", location.getLongitude());
+//     position.put("timestamp", location.getTime());
+
+//     if (location.hasAltitude()) position.put("altitude", location.getAltitude());
+//     if (location.hasAccuracy()) position.put("accuracy", (double) location.getAccuracy());
+//     if (location.hasBearing()) position.put("heading", (double) location.getBearing());
+//     if (location.hasSpeed()) position.put("speed", (double) location.getSpeed());
+//     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && location.hasSpeedAccuracy())
+//       position.put("speed_accuracy", (double) location.getSpeedAccuracyMetersPerSecond());
+
+//     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//       position.put("is_mocked", location.isMock());
+//     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+//       position.put("is_mocked", location.isFromMockProvider());
+//     } else {
+//       position.put("is_mocked", false);
+//     }
+
+//     return position;
+//   }
+// }
