@@ -23,14 +23,15 @@ class HomePage extends StatefulWidget {
   HomePage(this.cameras);
 
   @override
-  _HomePageState createState() => new _HomePageState();
+  HomePageState createState() => new HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  List<dynamic>? _recognitions;
-  int _imageHeight = 0;
-  int _imageWidth = 0;
-  String _model = "";
+@visibleForTesting
+class HomePageState extends State<HomePage> {
+  List<dynamic>? recognitions;
+  int imageHeight = 0;
+  int imageWidth = 0;
+  String model = "";
 
   @override
   void initState() {
@@ -41,11 +42,11 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  setRecognitions(recognitions, imageHeight, imageWidth) {
+  setRecognitions(recognition, imageHt, imageWd) {
     setState(() {
-      _recognitions = recognitions;
-      _imageHeight = imageHeight;
-      _imageWidth = imageWidth;
+      recognitions = recognition;
+      imageHeight = imageHt;
+      imageWidth = imageWd;
     });
   }
 
@@ -70,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                   RaisedButton(
                     color: Colors.blue,
                     child: const Text(
-                      "Wake Up!!",
+                      "$ssd Model",
                       style: TextStyle(color: Colors.black),
                     ),
                     onPressed: () async {
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                   RaisedButton(
                     color: Colors.teal,
                     child: const Text(
-                      yolo,
+                      "$yolo Model",
                       style: TextStyle(color: Colors.black),
                     ),
                     onPressed: () async {

@@ -48,7 +48,7 @@ class _HUDState extends State<HUD> {
     print(res);
   }
 
-  setRecognitions(recognitions, imageHeight, imageWidth) {
+  setRecognitions(recognitions, imageHeight, imageWidth) { 
     setState(() {
       _recognitions = recognitions;
       _imageHeight = imageHeight;

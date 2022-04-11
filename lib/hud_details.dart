@@ -173,7 +173,7 @@ class _HUDDetailsState extends State<HUDDetails> {
                 distanceFilter: 2,
                 accuracy: geo.LocationAccuracy.best))
         .listen((position) {
-      speedInMPS = position.speed.toStringAsFixed(0);
+      speedInMPS = (position.speed *3.6).toStringAsFixed(0);
     });
 
     initialCameraPosition = CameraPosition(
@@ -209,8 +209,7 @@ class _HUDDetailsState extends State<HUDDetails> {
                       Container(
                 padding: const EdgeInsets.only(left: 10),
                 child: Text(
-                  // '${widget.name}',
-                  'Welcome, Haris',
+                  '${widget.name}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

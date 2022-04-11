@@ -8,10 +8,11 @@ class MobileNumberView extends StatefulWidget {
   MobileNumberView(this.isSignup);
 
   @override
-  State<MobileNumberView> createState() => _MobileNumberViewState();
+  State<MobileNumberView> createState() => MobileNumberViewState();
 }
 
-class _MobileNumberViewState extends State<MobileNumberView> {
+@visibleForTesting
+class MobileNumberViewState extends State<MobileNumberView> {
   
   String? _mobileNumber = '';
   String? get mobileNumber => _mobileNumber;

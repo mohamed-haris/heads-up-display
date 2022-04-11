@@ -11,10 +11,11 @@ class OTPView extends StatefulWidget {
   OTPView(this.mobileNumber);
 
   @override
-  State<OTPView> createState() => _OTPViewState();
+  State<OTPView> createState() => OTPViewState();
 }
 
-class _OTPViewState extends State<OTPView> {
+@visibleForTesting
+class OTPViewState extends State<OTPView> {
 
   final _pinPutController = TextEditingController();
   final _pinPutFocusNode = FocusNode();
