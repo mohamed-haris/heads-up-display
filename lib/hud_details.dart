@@ -68,10 +68,10 @@ class _HUDDetailsState extends State<HUDDetails> {
         authToken: 'bca45feaf0e19698b8fe01869ed71f9c',
         twilioNumber: '+18454787636');
 
-    // ShakeDetector detector = ShakeDetector.autoStart(onPhoneShake: () {
-    //   print(widget.emergencyContacts);
-    //   sendCrashSMS("+917401529298");
-    // });
+    ShakeDetector detector = ShakeDetector.autoStart(onPhoneShake: () {
+      print(widget.emergencyContacts);
+      sendCrashSMS("+917401529298");
+    });
 
     listenBatteryLvl();
     _streamSubscriptions

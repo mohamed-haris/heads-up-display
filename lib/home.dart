@@ -72,7 +72,7 @@ class HomePageState extends State<HomePage> {
                     color: Colors.blue,
                     child: const Text(
                       "$ssd Model",
-                      style: TextStyle(color: Colors.black),
+                      style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () async {
                       var s = await FirestoreService().getName(user.uid!);
@@ -85,9 +85,25 @@ class HomePageState extends State<HomePage> {
                     }
                   ),
                   RaisedButton(
-                    color: Colors.teal,
+                    color: Colors.red,
                     child: const Text(
                       "$yolo Model",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      var s = await FirestoreService().getName(user.uid!);
+                      List emergencyContacts = await FirestoreService().getEmergencyContacts(user.uid!);
+                      setName(s);
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HUD(cameras,yolo, name, emergencyContacts)),
+                    );
+                    }
+                  ),
+                  RaisedButton(
+                    color: Colors.yellow,
+                    child: const Text(
+                      "Yolo v3 Model",
                       style: TextStyle(color: Colors.black),
                     ),
                     onPressed: () async {

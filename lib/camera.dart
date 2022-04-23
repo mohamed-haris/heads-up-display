@@ -32,7 +32,7 @@ class _CameraState extends State<Camera> {
     } else {
       controller = new CameraController(
         widget.cameras![0],
-        ResolutionPreset.high,
+        ResolutionPreset.medium
       );
       controller?.initialize().then((_) {
         if (!mounted) {
@@ -97,29 +97,9 @@ class _CameraState extends State<Camera> {
     var screenRatio = screenH / screenW;
     var previewRatio = previewH / previewW;
 
-//     final size = MediaQuery.of(context).size;
-// final deviceRatio = size.width / size.height;
-// double xScale = controller!.value.aspectRatio / deviceRatio;
-// final yScale = 1.0;
-
-// if (MediaQuery.of(context).orientation == Orientation.landscape) {
-//   xScale = 1.0;
-// }
-
 return Container(
   height: MediaQuery.of(context).size.height,
   width: MediaQuery.of(context).size.width,
   child: CameraPreview(controller!));
-
-//     return RotatedBox(
-//   quarterTurns: MediaQuery.of(context).orientation == Orientation.landscape ? 3 : 0,
-//   child: Container(
-//     child: Transform(
-//         alignment: Alignment.center,
-//         transform: Matrix4.diagonal3Values(xScale, yScale, 1),
-//         child: CameraPreview(controller!),
-//       ),
-//   ),
-// );
   }
 }
